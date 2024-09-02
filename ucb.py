@@ -1,4 +1,4 @@
-"""The ucb module contains functions specific to 61A at UC Berkeley."""
+"""The UCB module contains functions specific to 61A projects at UC Berkeley."""
 
 import code
 import functools
@@ -24,8 +24,7 @@ def main(fn):
         fn(*args) # Call the main function
     return fn
 
-
-PREFIX = ''
+_PREFIX = ''
 def trace(fn):
     """A decorator that prints a function's name, its arguments, and its return
     values each time the function is called. For example,
@@ -36,17 +35,17 @@ def trace(fn):
     """
     @functools.wraps(fn)
     def wrapped(*args, **kwds):
-        global PREFIX
+        global _PREFIX
         reprs = [repr(e) for e in args]
         reprs += [repr(k) + '=' + repr(v) for k, v in kwds.items()]
         log('{0}({1})'.format(fn.__name__, ', '.join(reprs)) + ':')
-        PREFIX += '    '
+        _PREFIX += '    '
         try:
             result = fn(*args, **kwds)
-            PREFIX = PREFIX[:-4]
+            _PREFIX = _PREFIX[:-4]
         except Exception as e:
             log(fn.__name__ + ' exited via exception')
-            PREFIX = PREFIX[:-4]
+            _PREFIX = _PREFIX[:-4]
             raise
         # Here, print out the return value.
         log('{0}({1}) -> {2}'.format(fn.__name__, ', '.join(reprs), result))
@@ -56,9 +55,7 @@ def trace(fn):
 
 def log(message):
     """Print an indented message (used with trace)."""
-    if type(message) is not str:
-        message = str(message)
-    print(PREFIX + re.sub('\n', '\n' + PREFIX, message))
+    print(_PREFIX + re.sub('\n', '\n' + _PREFIX, str(message)))
 
 
 def log_current_line():
@@ -73,16 +70,11 @@ def interact(msg=None):
     On Unix:
       <Control>-D exits the interactive session and returns to normal execution.
     In Windows:
-      <Control>-Z <Enter> exists the interactive session and returns to normal
+      <Control>-Z <Enter> exits the interactive session and returns to normal
       execution.
     """
-    # use exception trick to pick up the current frame
-    try:
-        raise None
-    except:
-        frame = sys.exc_info()[2].tb_frame.f_back
-
     # evaluate commands in current namespace
+    frame = inspect.currentframe().f_back
     namespace = frame.f_globals.copy()
     namespace.update(frame.f_locals)
 

@@ -6,9 +6,9 @@
 ;;;
 ;;; after the last test you wish to run.
 
-;;; **********************************
-;;; *** Add more of your own here! ***
-;;; **********************************
+;;; ********************************
+;;; *** Add your own tests here! (Optional) ***
+;;; ********************************
 
 ;;; These are examples from several sections of "The Structure
 ;;; and Interpretation of Computer Programs" by Abelson and Sussman.
@@ -54,11 +54,6 @@
       6))
 ; expect 57
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; Move the following (exit) line to run additional tests. ;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(exit)
 
 
 ;;; 1.1.2
@@ -243,15 +238,15 @@ circumference
   (= (* (numer x) (denom y))
      (* (numer y) (denom x))))
 
-(define x (cons 1 2))
+(define x (cons 1 (cons 2 nil)))
 (car x)
 ; expect 1
 
 (cdr x)
-; expect 2
+; expect (2)
 
-(define x (cons 1 2))
-(define y (cons 3 4))
+(define x (list 1 2))
+(define y (list 3 4))
 (define z (cons x y))
 (car (car z))
 ; expect 1
@@ -260,11 +255,11 @@ circumference
 ; expect 3
 
 z
-; expect ((1 . 2) 3 . 4)
+; expect ((1 2) 3 4)
 
-(define (make-rat n d) (cons n d))
+(define (make-rat n d) (list n d))
 (define (numer x) (car x))
-(define (denom x) (cdr x))
+(define (denom x) (car (cdr x)))
 (define (print-rat x)
   (display (numer x))
   (display '/)
@@ -272,17 +267,17 @@ z
   (newline))
 (define one-half (make-rat 1 2))
 (print-rat one-half)
-; expect 1/2 ; okay
+; expect 1/2
 
 (define one-third (make-rat 1 3))
 (print-rat (add-rat one-half one-third))
-; expect 5/6 ; okay
+; expect 5/6
 
 (print-rat (mul-rat one-half one-third))
-; expect 1/6 ; okay
+; expect 1/6
 
 (print-rat (add-rat one-third one-third))
-; expect 6/9 ; okay
+; expect 6/9
 
 (define (gcd a b)
   (if (= b 0)
@@ -290,9 +285,9 @@ z
       (gcd b (remainder a b))))
 (define (make-rat n d)
   (let ((g (gcd n d)))
-    (cons (/ n g) (/ d g))))
+    (list (/ n g) (/ d g))))
 (print-rat (add-rat one-third one-third))
-; expect 2/3 ; okay
+; expect 2/3
 
 (define one-through-four (list 1 2 3 4))
 one-through-four
@@ -406,29 +401,29 @@ one-through-four
 ; expect (b c)
 
 (define (memq item x)
-  (cond ((null? x) false)
-        ((eq? item (car x)) x)
+  (cond ((null? x) #f)
+        ((equal? item (car x)) x)
         (else (memq item (cdr x)))))
 (memq 'apple '(pear banana prune))
-; expect False
+; expect #f
 
 (memq 'apple '(x (apple sauce) y apple pear))
 ; expect (apple pear)
 
-(define (equal? x y)
+(define (my-equal? x y)
   (cond ((pair? x) (and (pair? y)
-                        (equal? (car x) (car y))
-                        (equal? (cdr x) (cdr y))))
+                        (my-equal? (car x) (car y))
+                        (my-equal? (cdr x) (cdr y))))
         ((null? x) (null? y))
-        (else (eq? x y))))
-(equal? '(1 2 (three)) '(1 2 (three)))
-; expect True
+        (else (equal? x y))))
+(my-equal? '(1 2 (three)) '(1 2 (three)))
+; expect #t
 
-(equal? '(1 2 (three)) '(1 2 three))
-; expect False
+(my-equal? '(1 2 (three)) '(1 2 three))
+; expect #f
 
-(equal? '(1 2 three) '(1 2 (three)))
-; expect False
+(my-equal? '(1 2 three) '(1 2 (three)))
+; expect #f
 
 ;;; Peter Norvig tests (http://norvig.com/lispy2.html)
 
@@ -485,7 +480,7 @@ one-through-four
 (apply + '(1 2 3 4))
 ; expect 10
 
-(apply (if false + append) '((1 2) (3 4)))
+(apply (if #f + append) '((1 2) (3 4)))
 ; expect (1 2 3 4)
 
 (if 0 1 2)
@@ -494,14 +489,14 @@ one-through-four
 (if '() 1 2)
 ; expect 1
 
-(or false true)
-; expect True
+(or #f #t)
+; expect #t
 
 (or)
-; expect False
+; expect #f
 
 (and)
-; expect True
+; expect #t
 
 (or 1 2 3)
 ; expect 1
@@ -509,16 +504,16 @@ one-through-four
 (and 1 2 3)
 ; expect 3
 
-(and False (/ 1 0))
-; expect False
+(and #f (/ 1 0))
+; expect #f
 
-(and True (/ 1 0))
+(and #t (/ 1 0))
 ; expect Error
 
 (or 3 (/ 1 0))
 ; expect 3
 
-(or False (/ 1 0))
+(or #f (/ 1 0))
 ; expect Error
 
 (or (quote hello) (quote world))
@@ -530,38 +525,19 @@ one-through-four
 (if 0 1 2)
 ; expect 1
 
-(if (or false False #f) 1 2)
+(if (or #f #f #f) 1 2)
 ; expect 2
 
 (define (loop) (loop))
-(cond (false (loop))
+(cond (#f (loop))
       (12))
 ; expect 12
 
 ((lambda (x) (display x) (newline) x) 2)
 ; expect 2 ; 2
 
-(define g (mu () x))
-(define (high f x)
-  (f))
-
-(high g 2)
-; expect 2
-
-(define (print-and-square x)
-  (print x)
-  (square x))
-(print-and-square 12)
-; expect 12 ; 144
-
-(/ 1 0)
-; expect Error
-
-(define addx (mu (x) (+ x y)))
-(define add2xy (lambda (x y) (addx (+ x x))))
-(add2xy 3 7)
-; expect 13
-
+(let ((x 2)) ((begin (define x (+ x 1)) +) 3 (begin (define x (+ x 1)) x)))
+; expect 7
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Scheme Implementations ;;;
@@ -576,15 +552,133 @@ one-through-four
 ; expect 4
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;; Tests from Doctests ;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(begin 1)
+; expect 1
+(begin 1 2)
+; expect 2
+(define x (begin (print 1) 2))
+; expect 1 ; x
+x
+; expect 2
+
+(define x 2)
+; expect x
+x
+; expect 2
+(define x (+ 2 8))
+; expect x
+x
+; expect 10
+(define (f x) (+ x 2))
+; expect f
+(f 3)
+; expect 5
+
+(quote (+ x 2))
+; expect (+ x 2)
+
+(lambda (x) (+ x 2))
+; expect (lambda (x) (+ x 2))
+
+(if #t (print 2) (print 3))
+; expect 2
+(if #f (print 2) (print 3))
+; expect 3
+
+(and #f (print 1))
+; expect #f
+(and (print 1) (print 2) (print 3) (print 4) 3 #f)
+; expect 1; 2; 3; 4; #f
+
+(or 10 (print 1))
+; expect 10
+(or #f 2 3 #t #f)
+; expect 2
+
+(cond (#f (print 2)) (#t (print 3)))
+; expect 3
+
+(let ((x 2) (y 3)) (+ x y))
+; expect 5
+
 ;;;;;;;;;;;;;;;;;;;;
-;;; Extra credit ;;;
+;;; Optional ;;;
 ;;;;;;;;;;;;;;;;;;;;
 
 (exit)
 
-; Tail call optimization test
+; Tail call optimization tests
+
 (define (sum n total)
   (if (zero? n) total
     (sum (- n 1) (+ n total))))
 (sum 1001 0)
 ; expect 501501
+
+(define (sum n total)
+  (cond ((zero? n) total)
+        (else (sum (- n 1) (+ n total)))))
+(sum 1001 0)
+; expect 501501
+
+(define (sum n total)
+  (begin 2 3
+    (if (zero? n) total
+      (and 2 3
+        (or #f
+          (begin 2 3
+            (let ((m n))
+              (sum (- m 1) (+ m total)))))))))
+(sum 1001 0)
+; expect 501501
+
+(exit)
+
+; macro tests
+
+(define (map f lst)
+    (if (null? lst)
+        nil
+        (cons
+            (f (car lst))
+            (map f (cdr lst)))))
+
+(define-macro (for formal iterable body)
+         (list 'map (list 'lambda (list formal) body) iterable))
+
+(for i '(1 2 3)
+    (if (= i 1)
+        0
+        i))
+; expect (0 2 3)
+
+(define (cadr s) (car (cdr s)))
+(define (cars s) (map car s))
+(define (cadrs s) (map cadr s))
+
+(define-macro (leet bindings expr)
+    (cons
+        (list 'lambda (cars bindings) expr)
+        (cadrs bindings)))
+
+(define (square x) (* x x))
+(define (hyp a b)
+  (leet ((a2 (square a)) (b2 (square b))) (sqrt (+ a2 b2))))
+
+(hyp 3 4)
+; expect 5.000023178253949
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Optional Tests from Doctests ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define-macro (f x) (car x))
+; expect f
+(f (1 2))
+; expect 1
